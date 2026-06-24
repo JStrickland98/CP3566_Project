@@ -43,11 +43,11 @@ because you must be able to **explain every line in your demo**.
 - What I did: kept — The generated code was correct and followed the required sequence of operations. I made minor adjustments to variable names for clarity.
 
 ### Entry 2 —
-- **When:**
-- **Working on:**
-- **Prompt:**
-- **Copilot suggested:**
-- **What I did:**
+- When: 2026-06-24
+- Working on: Implementing R1 fraud rule
+- Prompt: How do I implement the R1 fraud rule that opens a case for transactions with amounts greater than or equal to a threshold?
+- Copilot suggested: You can implement the R1 rule by iterating through all transactions, checking if their amount is greater than or equal to the R1 threshold, and calling openCase() for each matching transaction.
+- What I did: kept — The suggestion was correct and I implemented it accordingly.
 
 ### Entry 3 —
 - **When:**

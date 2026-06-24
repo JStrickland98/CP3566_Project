@@ -3,6 +3,8 @@ package com.example.fraud.service;
 import com.example.fraud.model.Alert;
 import com.example.fraud.model.Case;
 import com.example.fraud.model.AuditLog;
+import com.example.fraud.model.Rule;
+import com.example.fraud.model.Transaction;
 
 import com.example.fraud.repo.AlertRepository;
 import com.example.fraud.repo.AuditLogRepository;
@@ -13,6 +15,7 @@ import com.example.fraud.repo.WatchlistRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * TODO (student) — THE RULE ENGINE.   PROJECT_BRIEF.html §4.3
@@ -56,16 +59,30 @@ public class RuleEngineService {
      * @return the number of cases opened (should be 16 on the seeded data)
      */
     public int scanAndOpenCases() {
-        // TODO (student):
-        //   1. load the rules (thresholds) from ruleRepo into something you can look up by code
-        //   2. R1 — open a case for each transaction whose amount >= the R1 threshold
-        //   3. R3 — open a case for each transaction whose counterparty is on the watchlist
-        //   4. R2 — for one account, open a case if >= R2.minCount transactions fall within
-        //           R2.windowMinutes of each other
-        //   5. R4 (bonus) — for one account, open a case if >= R4.minCount transfers of
-        //           $9,000–$9,999 fall within R4.windowMinutes
-        //   call openCase(...) for every hit, and count them.
-        return 0;
+
+        int casesOpened = 0;
+
+        Rule r1 = ruleRepo.findById("R1")
+                .orElseThrow();
+
+        List<Transaction> transactions = transactionRepo.findAll();
+
+        for (Transaction tx : transactions) {
+
+            if (tx.getAmount().compareTo(r1.getThresholdAmount()) >= 0) {
+
+                openCase(
+                        tx.getId(),
+                        "R1",
+                        "Transaction amount exceeds threshold",
+                        tx.getOccurredAt()
+                );
+
+                casesOpened++;
+            }
+        }
+
+        return casesOpened;
     }
 
     /**
