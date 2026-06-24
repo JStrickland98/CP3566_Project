@@ -69,52 +69,53 @@ public class RuleEngineService {
     public int scanAndOpenCases() {
         int casesOpened = 0;
 
-        // Load all transactions
+        // Load all data
         List<Transaction> allTransactions = transactionRepo.findAll();
-
-        Rule r1 = ruleRepo.findById("R1")
-                .orElseThrow();
-
-        Rule r2 = ruleRepo.findById("R2")
-                .orElseThrow();
-
-        List<Transaction> transactions = transactionRepo.findAll();
-
         List<Watchlist> watchlistEntries = watchlistRepo.findAll();
 
-        Set<String> watchlistNames = new HashSet<>();
+        // Build lookup maps
+        Rule r1 = ruleRepo.findById("R1").orElse(null);
+        Rule r2 = ruleRepo.findById("R2").orElse(null);
+        Rule r3 = ruleRepo.findById("R3").orElse(null);
+        Rule r4 = ruleRepo.findById("R4").orElse(null);
 
+        Set<String> watchlistNames = new HashSet<>();
         for (Watchlist w : watchlistEntries) {
             watchlistNames.add(w.getName());
         }
 
-        for (Transaction tx : transactions) {
-
-            if (tx.getAmount().compareTo(r1.getThresholdAmount()) >= 0) {
-
-                openCase(
-                        tx.getId(),
-                        "R1",
-                        "Transaction amount exceeds threshold",
-                        tx.getOccurredAt()
-                );
-
-                casesOpened++;
+        // R1: Large single amount
+        if (r1 != null && r1.isEnabled()) {
+            for (Transaction tx : allTransactions) {
+                if (tx.getAmount().compareTo(r1.getThresholdAmount()) >= 0) {
+                    openCase(tx.getId(), "R1",
+                            "Amount " + tx.getAmount() + " >= threshold " + r1.getThresholdAmount(),
+                            tx.getOccurredAt());
+                    casesOpened++;
+                }
             }
         }
 
-        for (Transaction tx : transactions) {
-
-            if (watchlistNames.contains(tx.getCounterparty())) {
-                openCase(
-                        tx.getId(),
-                        "R3",
-                        "Counterparty appears on watchlist",
-                        tx.getOccurredAt()
-                );
-
-                casesOpened++;
+        // R3: Watchlist counterparty
+        if (r3 != null && r3.isEnabled()) {
+            for (Transaction tx : allTransactions) {
+                if (watchlistNames.contains(tx.getCounterparty())) {
+                    openCase(tx.getId(), "R3",
+                            "Counterparty '" + tx.getCounterparty() + "' on watchlist",
+                            tx.getOccurredAt());
+                    casesOpened++;
+                }
             }
+        }
+
+        // R2: Velocity
+        if (r2 != null && r2.isEnabled()) {
+            casesOpened = checkVelocity(allTransactions, r2, casesOpened);
+        }
+
+        // R4: Structuring (bonus)
+        if (r4 != null && r4.isEnabled()) {
+            casesOpened = checkStructuring(allTransactions, r4, casesOpened);
         }
 
         return casesOpened;
@@ -166,6 +167,73 @@ public class RuleEngineService {
                     openCase(windowStart.getId(), "R2", detail, windowStart.getOccurredAt());
                     caseCount++;
                     break;  // Only one case per account for R2
+                }
+            }
+        }
+
+        return caseCount;
+    }
+
+    private int checkStructuring(List<Transaction> allTransactions, Rule r4, int caseCount) {
+        if (r4 == null) {
+            return caseCount;
+        }
+
+        // Group transactions by accountId
+        Map<Long, List<Transaction>> txnsByAccount = new HashMap<>();
+        for (Transaction txn : allTransactions) {
+            txnsByAccount.computeIfAbsent(txn.getAccountId(), k -> new ArrayList<>())
+                    .add(txn);
+        }
+
+        // For each account, check for structuring: multiple transactions in the $9,000-$9,999 range
+        java.math.BigDecimal structuringMin = new java.math.BigDecimal("9000");
+        java.math.BigDecimal structuringMax = new java.math.BigDecimal("9999");
+
+        for (Map.Entry<Long, List<Transaction>> entry : txnsByAccount.entrySet()) {
+            List<Transaction> accountTxns = entry.getValue();
+
+            // Filter to structuring-range transactions
+            List<Transaction> structuringTxns = new ArrayList<>();
+            for (Transaction txn : accountTxns) {
+                if (txn.getAmount().compareTo(structuringMin) >= 0 &&
+                    txn.getAmount().compareTo(structuringMax) <= 0) {
+                    structuringTxns.add(txn);
+                }
+            }
+
+            if (structuringTxns.isEmpty()) {
+                continue;
+            }
+
+            // Sort by timestamp
+            structuringTxns.sort((t1, t2) -> t1.getOccurredAt().compareTo(t2.getOccurredAt()));
+
+            // Sliding window on structuring transactions
+            for (int i = 0; i < structuringTxns.size(); i++) {
+                Transaction windowStart = structuringTxns.get(i);
+                LocalDateTime windowEnd = windowStart.getOccurredAt()
+                        .plusMinutes(r4.getWindowMinutes());
+
+                // Count structuring transactions within this window
+                int countInWindow = 0;
+                for (int j = i; j < structuringTxns.size(); j++) {
+                    Transaction txn = structuringTxns.get(j);
+                    if (!txn.getOccurredAt().isAfter(windowEnd)) {
+                        countInWindow++;
+                    } else {
+                        break;
+                    }
+                }
+
+                // If we hit the threshold, open a case
+                if (countInWindow >= r4.getMinCount()) {
+                    String detail = countInWindow + " structuring transfers ($9k-$9,999) in "
+                            + r4.getWindowMinutes() + " minutes for account "
+                            + entry.getKey();
+                    openCase(windowStart.getId(), "R4", detail, windowStart.getOccurredAt());
+                    caseCount++;
+                    break;  // Only one case per account for R4
                 }
             }
         }

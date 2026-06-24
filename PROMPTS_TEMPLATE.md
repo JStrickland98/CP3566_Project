@@ -59,7 +59,7 @@ because you must be able to **explain every line in your demo**.
 ### Entry 4 —
 - When: 2026-06-24
 - Working on: CaseService apply() method
-- Prompt: How do I make a switch statement in that validates state transitions between new, reviewing, escalated, closed_false and closed_fraud?
+- Prompt: How do I make a switch statement that validates state transitions between new, reviewing, escalated, closed_false and closed_fraud?
 - Copilot suggested: Using a switch on the current status and validating allowed actions before updating the state.
 - What I did: reviewed The generated state-machine structure and adapted it to the project's specifications. Corrected the audit logging to record the previous status before updating the case.
 
@@ -69,3 +69,17 @@ because you must be able to **explain every line in your demo**.
 - Prompt: Implement the apply() method for a fraud case workflow.
 - Copilot suggested: an isRoleAllowed() helper method that checks the requested action, actor role, and current case status before allowing the workflow transition.
 - What I did: reviewed the generated logic against the assignment specification, verified the permitted actions for analyst and investigator roles, and added the helper to support the workflow state machine.
+
+### Entry 6 —
+- When: 2026-06-24
+- Working on: Security configuration and local testing
+- Prompt: Configure security beans, seed users with BCrypt-hashed passwords, and explain how to test the application locally.
+- Copilot suggested: using a BCryptPasswordEncoder bean for password hashing, creating a CommandLineRunner to seed users, and providing instructions for running the application with an embedded database.
+- What I did: Compared the suggestions to the starter project's existing config, verified the PasswordEncoder bean and uder model, tested the project using Maven build commands, and fixed any compilation issues.
+
+### Entry 7 —
+- When: 2026-06-24
+- Working on: Frontend 
+- Prompt: Generate a simple static HTML and JavaScript frontend for the fraud management application, including forms for submitting transactions and viewing case statuses.
+- Copilot suggested: a lightweight HTML page with forms for transaction submission, a table for displaying case statuses, and basic JavaScript for handling form submissions and updating the UI.
+- What I did: reviewed the generated interface design and used the suggestion as a starting point.
