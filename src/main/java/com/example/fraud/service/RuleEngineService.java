@@ -1,5 +1,9 @@
 package com.example.fraud.service;
 
+import com.example.fraud.model.Alert;
+import com.example.fraud.model.Case;
+import com.example.fraud.model.AuditLog;
+
 import com.example.fraud.repo.AlertRepository;
 import com.example.fraud.repo.AuditLogRepository;
 import com.example.fraud.repo.CaseRepository;
@@ -72,8 +76,27 @@ public class RuleEngineService {
      * @param when          the timestamp to stamp the alert and case with
      */
     private void openCase(long transactionId, String ruleCode, String detail, LocalDateTime when) {
-        // TODO (student): save a new Alert(transactionId, ruleCode, detail, when) with alertRepo,
-        //   then a new Case(alertId, "NEW", null, when) with caseRepo,
-        //   then an AuditLog row ("system", "OPEN_CASE", "case", caseId, ...) with auditLogRepo.
+
+        // Step 1: Create and save Alert
+        Alert alert = new Alert(transactionId, ruleCode, detail, when);
+        Alert savedAlert = alertRepo.save(alert);
+        Long alertId = savedAlert.getId();
+
+        // Step 2: Create and save Case linked to the alert
+        Case caseRecord = new Case(alertId, "NEW", null, when);
+        Case savedCase = caseRepo.save(caseRecord);
+        Long caseId = savedCase.getId();
+
+        // Step 3: Create and save AuditLog entry
+        AuditLog auditLog = new AuditLog(
+                "system",
+                "OPEN_CASE",
+                "case",
+                caseId,
+                ruleCode + ": " + detail,
+                when
+        );
+
+        auditLogRepo.save(auditLog);
     }
 }
