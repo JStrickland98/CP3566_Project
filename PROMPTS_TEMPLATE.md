@@ -56,4 +56,16 @@ because you must be able to **explain every line in your demo**.
 - Copilot suggested: You can implement the R2 velocity check by maintaining a timestamped list of transactions for each account. When a new transaction occurs, check the list for any transactions within the specified time frame and trigger an alert if the count exceeds a threshold.
 - What I did: kept — I implemented the suggested approach, using a HashMap to store account transactions and checking the timestamps as described.
 
-*(add more entries as you go)*
+### Entry 4 —
+- When: 2026-06-24
+- Working on: CaseService apply() method
+- Prompt: How do I make a switch statement in that validates state transitions between new, reviewing, escalated, closed_false and closed_fraud?
+- Copilot suggested: Using a switch on the current status and validating allowed actions before updating the state.
+- What I did: reviewed The generated state-machine structure and adapted it to the project's specifications. Corrected the audit logging to record the previous status before updating the case.
+
+### Entry 5 —
+- When: 2026-06-24
+- Working on: CaseService apply() method
+- Prompt: Implement the apply() method for a fraud case workflow.
+- Copilot suggested: an isRoleAllowed() helper method that checks the requested action, actor role, and current case status before allowing the workflow transition.
+- What I did: reviewed the generated logic against the assignment specification, verified the permitted actions for analyst and investigator roles, and added the helper to support the workflow state machine.
