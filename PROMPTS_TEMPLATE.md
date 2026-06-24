@@ -50,10 +50,10 @@ because you must be able to **explain every line in your demo**.
 - What I did: kept — The suggestion was correct and I implemented it accordingly.
 
 ### Entry 3 —
-- **When:**
-- **Working on:**
-- **Prompt:**
-- **Copilot suggested:**
-- **What I did:**
+- When: 2026-06-24
+- Working on: R2 Velocity Check
+- Prompt: Show me how to detect when multiple transactions occur for the same account within a short configurable time frame and trigger an alert.
+- Copilot suggested: You can implement the R2 velocity check by maintaining a timestamped list of transactions for each account. When a new transaction occurs, check the list for any transactions within the specified time frame and trigger an alert if the count exceeds a threshold.
+- What I did: kept — I implemented the suggested approach, using a HashMap to store account transactions and checking the timestamps as described.
 
 *(add more entries as you go)*
